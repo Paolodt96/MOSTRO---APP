@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <title>Bestiario - Template Mostro</title>
+  <title>Bestiario - Editor Mostri</title>
 
   <!-- Per mobile / app-like -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,7 +31,172 @@
       background: #2a1a12;  /* sfondo esterno scuro (solo video) */
       font-family: "Crimson Text", serif;
       padding: 20px 0;
+      color: #f7e4c4;
     }
+
+    /* VISTE PRINCIPALI */
+    #view-library,
+    #view-editor {
+      max-width: 210mm;
+      margin: 0 auto;
+    }
+
+    /* ================
+       VISTA LIBRERIA
+       ================ */
+    .library-wrapper {
+      background: #1a100b;
+      border: 1px solid #5b3c22;
+      box-shadow: 0 0 20px rgba(0,0,0,0.6);
+      padding: 16px 18px 18px;
+      border-radius: 4px;
+    }
+
+    .library-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #5b3c22;
+      padding-bottom: 6px;
+    }
+
+    .library-title {
+      font-family: "Cinzel", serif;
+      font-size: 20px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .library-subtitle {
+      font-size: 11px;
+      opacity: 0.8;
+      margin-left: 8px;
+    }
+
+    .library-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .lib-btn {
+      background: rgba(40, 20, 12, 0.85);
+      color: #f7e4c4;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 1px solid #d2a569;
+      font-size: 11px;
+    }
+
+    .lib-btn:hover {
+      background: rgba(60, 30, 18, 0.9);
+    }
+
+    .library-search {
+      margin: 8px 0 10px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .library-search input {
+      flex: 1;
+      padding: 4px 6px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid #5b3c22;
+      background: #2a1a12;
+      color: #f7e4c4;
+    }
+
+    .library-search input::placeholder {
+      color: #b49a72;
+      font-style: italic;
+    }
+
+    .monster-list {
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 70vh;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .monster-empty {
+      font-size: 12px;
+      font-style: italic;
+      opacity: 0.8;
+      margin-top: 10px;
+    }
+
+    .monster-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 8px;
+      border-radius: 4px;
+      background: #24130d;
+      border: 1px solid #5b3c22;
+      gap: 8px;
+    }
+
+    .monster-card-main {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .monster-card-title {
+      font-size: 14px;
+      font-family: "Cinzel", serif;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .monster-card-subtitle {
+      font-size: 11px;
+      opacity: 0.8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .monster-card-meta {
+      font-size: 10px;
+      opacity: 0.7;
+    }
+
+    .monster-card-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .monster-card-actions button {
+      background: rgba(60, 30, 18, 0.9);
+      color: #f7e4c4;
+      border-radius: 4px;
+      border: 1px solid #d2a569;
+      font-size: 10px;
+      padding: 3px 6px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .monster-card-actions button:hover {
+      background: rgba(90, 40, 22, 0.95);
+    }
+
+    /* ================
+         VISTA EDITOR
+       ================ */
 
     /* FOGLIO PERGAMENA CENTRALE – A4 FISSO */
     .page {
@@ -51,7 +216,7 @@
       overflow: hidden;
     }
 
-    /* TOOLBAR IN ALTO */
+    /* TOOLBAR IN ALTO (EDITOR) */
     .toolbar {
       display: flex;
       justify-content: flex-end;
@@ -265,9 +430,18 @@
         background: none; /* niente sfondo esterno */
       }
 
-      /* nasconde la toolbar nel PDF */
+      /* nasconde libreria e toolbar nel PDF */
+      #view-library {
+        display: none !important;
+      }
+
       .toolbar {
         display: none !important;
+      }
+
+      #view-editor {
+        max-width: none;
+        margin: 0;
       }
 
       /* la pagina deve occupare TUTTO il foglio, senza bordi/ombre */
@@ -297,112 +471,145 @@
 </head>
 <body>
 
-  <div class="page" id="page">
-    <!-- TOOLBAR -->
-    <div class="toolbar">
-      <button type="button" class="btn" data-action="export">Esporta PDF</button>
-      <button type="button" class="btn" data-action="undo">Undo</button>
-      <button type="button" class="btn" data-action="redo">Redo</button>
+  <!-- VISTA LIBRERIA MOSTRI -->
+  <div id="view-library">
+    <div class="library-wrapper">
+      <div class="library-header">
+        <div>
+          <div class="library-title">Bestiario</div>
+          <div class="library-subtitle">Archivio dei mostri del master</div>
+        </div>
+        <div class="library-actions">
+          <button type="button" class="lib-btn" id="btn-new-monster">Nuovo mostro</button>
+          <!-- In futuro: esporta/importa archivio -->
+        </div>
+      </div>
 
-      <label>
-        Carica immagine
-        <input type="file" id="imageUpload" accept="image/*">
-      </label>
+      <div class="library-search">
+        <input type="text" id="monster-search" placeholder="Cerca per nome o tipo...">
+      </div>
 
-      <button type="button" class="btn" data-action="save">Salva</button>
-      <button type="button" class="btn" data-action="load">Carica</button>
+      <div id="monster-list" class="monster-list">
+        <!-- Popolato via JS -->
+      </div>
+      <div id="monster-empty" class="monster-empty" style="display:none;">
+        Nessun mostro salvato. Crea il tuo primo mostro con il pulsante “Nuovo mostro”.
+      </div>
     </div>
+  </div>
 
-    <div class="monster-layout">
+  <!-- VISTA EDITOR (FOGLIO PERGAMENA) -->
+  <div id="view-editor" style="display:none;">
+    <div class="page" id="page">
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <button type="button" class="btn" data-action="export">Esporta PDF</button>
+        <button type="button" class="btn" data-action="undo">Undo</button>
+        <button type="button" class="btn" data-action="redo">Redo</button>
 
-      <!-- COLONNA SINISTRA: TUTTA EDITABILE -->
-      <section class="left-column">
+        <label>
+          Carica immagine
+          <input type="file" id="imageUpload" accept="image/*">
+        </label>
 
-        <header class="monster-header" contenteditable="true">
-          Nome del Mostro
-        </header>
+        <button type="button" class="btn" data-action="save">Salva mostro</button>
+        <button type="button" class="btn" data-action="library">Libreria</button>
+      </div>
 
-        <div class="monster-subtitle" contenteditable="true">
-          Taglia media, mostruosità, neutrale malvagio
-        </div>
+      <div class="monster-layout">
 
-        <section class="monster-lore" contenteditable="true">
-          <p>
-            Scrivi qui la descrizione narrativa del mostro: origine, comportamento,
-            territorio, leggende e qualsiasi dettaglio utile al master.
-          </p>
-          <p>
-            Questa sezione è completamente editabile: clicca e scrivi come in un documento.
-          </p>
+        <!-- COLONNA SINISTRA: TUTTA EDITABILE -->
+        <section class="left-column">
+
+          <header class="monster-header" contenteditable="true">
+            Nome del Mostro
+          </header>
+
+          <div class="monster-subtitle" contenteditable="true">
+            Taglia media, mostruosità, neutrale malvagio
+          </div>
+
+          <section class="monster-lore" contenteditable="true">
+            <p>
+              Scrivi qui la descrizione narrativa del mostro: origine, comportamento,
+              territorio, leggende e qualsiasi dettaglio utile al master.
+            </p>
+            <p>
+              Questa sezione è completamente editabile: clicca e scrivi come in un documento.
+            </p>
+          </section>
+
+          <section class="stat-block" contenteditable="true">
+            <div class="stat-title">
+              Blocco statistiche
+            </div>
+
+            <div class="stat-row">
+              <span class="section-label">Classe Armatura</span> 15 (pelle coriacea)<br>
+              <span class="section-label">Punti Ferita</span> 68 (8d10 + 24)<br>
+              <span class="section-label">Velocità</span> 9 m
+            </div>
+
+            <div class="stat-row">
+              <div class="ability-grid">
+                <div class="ability"><span>FOR</span><span class="score">16 (+3)</span></div>
+                <div class="ability"><span>DES</span><span class="score">14 (+2)</span></div>
+                <div class="ability"><span>COS</span><span class="score">16 (+3)</span></div>
+                <div class="ability"><span>INT</span><span class="score">8 (-1)</span></div>
+                <div class="ability"><span>SAG</span><span class="score">12 (+1)</span></div>
+                <div class="ability"><span>CAR</span><span class="score">10 (+0)</span></div>
+              </div>
+            </div>
+
+            <div class="stat-row">
+              <span class="section-label">Tiri Salvezza</span> DES +4, COS +5<br>
+              <span class="section-label">Abilità</span> Percezione +3, Furtività +4<br>
+              <span class="section-label">Sensi</span> scurovisione 18 m, Percezione passiva 13<br>
+              <span class="section-label">Linguaggi</span> —<br>
+              <span class="section-label">Grado di Sfida</span> 4 (1.100 PE)
+            </div>
+
+            <div class="stat-row">
+              <div class="trait">
+                <span class="trait-name">Fiuto del Predatore.</span>
+                Testo abilità speciale…
+              </div>
+              <div class="trait">
+                <span class="trait-name">Agguato.</span>
+                Testo abilità speciale…
+              </div>
+            </div>
+
+            <div class="stat-row">
+              <span class="section-label">Azioni</span>
+              <div class="action">
+                <span class="action-name">Multiattacco.</span>
+                Testo azione…
+              </div>
+              <div class="action">
+                <span class="action-name">Artigli.</span>
+                Testo attacco…
+              </div>
+            </div>
+          </section>
+
         </section>
 
-        <section class="stat-block" contenteditable="true">
-          <div class="stat-title">
-            Blocco statistiche
+        <!-- COLONNA DESTRA: IMMAGINE MOSTRO -->
+        <aside class="right-column">
+          <div class="monster-art-wrapper">
+            <img id="monster-art" src="" alt="Illustrazione del mostro">
           </div>
+        </aside>
 
-          <div class="stat-row">
-            <span class="section-label">Classe Armatura</span> 15 (pelle coriacea)<br>
-            <span class="section-label">Punti Ferita</span> 68 (8d10 + 24)<br>
-            <span class="section-label">Velocità</span> 9 m
-          </div>
-
-          <div class="stat-row">
-            <div class="ability-grid">
-              <div class="ability"><span>FOR</span><span class="score">16 (+3)</span></div>
-              <div class="ability"><span>DES</span><span class="score">14 (+2)</span></div>
-              <div class="ability"><span>COS</span><span class="score">16 (+3)</span></div>
-              <div class="ability"><span>INT</span><span class="score">8 (-1)</span></div>
-              <div class="ability"><span>SAG</span><span class="score">12 (+1)</span></div>
-              <div class="ability"><span>CAR</span><span class="score">10 (+0)</span></div>
-            </div>
-          </div>
-
-          <div class="stat-row">
-            <span class="section-label">Tiri Salvezza</span> DES +4, COS +5<br>
-            <span class="section-label">Abilità</span> Percezione +3, Furtività +4<br>
-            <span class="section-label">Sensi</span> scurovisione 18 m, Percezione passiva 13<br>
-            <span class="section-label">Linguaggi</span> —<br>
-            <span class="section-label">Grado di Sfida</span> 4 (1.100 PE)
-          </div>
-
-          <div class="stat-row">
-            <div class="trait">
-              <span class="trait-name">Fiuto del Predatore.</span>
-              Testo abilità speciale…
-            </div>
-            <div class="trait">
-              <span class="trait-name">Agguato.</span>
-              Testo abilità speciale…
-            </div>
-          </div>
-
-          <div class="stat-row">
-            <span class="section-label">Azioni</span>
-            <div class="action">
-              <span class="action-name">Multiattacco.</span>
-              Testo azione…
-            </div>
-            <div class="action">
-              <span class="action-name">Artigli.</span>
-              Testo attacco…
-            </div>
-          </div>
-        </section>
-
-      </section>
-
-      <!-- COLONNA DESTRA: IMMAGINE MOSTRO -->
-      <aside class="right-column">
-        <div class="monster-art-wrapper">
-          <img id="monster-art" src="" alt="Illustrazione del mostro">
-        </div>
-      </aside>
-
+      </div>
     </div>
   </div>
 
   <script>
+    /* ===============================
+       VARIABILI GLOBALI / ELEMENTI
+       =============================== */
     const page = document.getElementById('page');
     const img = document.getElementById('monster-art');
     const fileInput = document.getElementById('imageUpload');
@@ -420,8 +627,30 @@
     let isRestoring = false;
     let undoStack = [];
     let redoStack = [];
+    let currentMonsterId = null;  // null = nuovo mostro
 
-    // --- Utility: stato corrente ---
+    const viewLibrary = document.getElementById('view-library');
+    const viewEditor  = document.getElementById('view-editor');
+    const monsterListEl = document.getElementById('monster-list');
+    const monsterEmptyEl = document.getElementById('monster-empty');
+    const monsterSearchInput = document.getElementById('monster-search');
+
+    /* ===============================
+       FUNZIONI DI VISTA
+       =============================== */
+    function showView(name) {
+      if (name === 'library') {
+        viewLibrary.style.display = 'block';
+        viewEditor.style.display = 'none';
+      } else {
+        viewLibrary.style.display = 'none';
+        viewEditor.style.display = 'block';
+      }
+    }
+
+    /* ===============================
+       STATO EDITOR (già esistente)
+       =============================== */
     function getState() {
       const contents = {};
       editableSelectors.forEach(sel => {
@@ -455,7 +684,37 @@
       redoStack = []; // ogni nuova modifica invalida il redo
     }
 
-    // --- BLOCCO OLTRE A4 + gestione stato per ogni campo ---
+    function undo() {
+      if (undoStack.length <= 1) return;
+      const current = undoStack.pop();
+      redoStack.push(current);
+      const previous = undoStack[undoStack.length - 1];
+      applyState(previous);
+    }
+
+    function redo() {
+      if (!redoStack.length) return;
+      const next = redoStack.pop();
+      undoStack.push(next);
+      applyState(next);
+    }
+
+    function placeCaretAtEnd(el) {
+      el.focus();
+      if (typeof window.getSelection != "undefined"
+          && typeof document.createRange != "undefined") {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }
+
+    /* ===============================
+       BLOCCO OLTRE LIMITE A4
+       =============================== */
     editableAreas.forEach(area => {
       area.dataset.lastContent = area.innerHTML;
 
@@ -487,23 +746,9 @@
     // Snapshot iniziale
     snapshot();
 
-    // --- Undo / Redo ---
-    function undo() {
-      if (undoStack.length <= 1) return;
-      const current = undoStack.pop();
-      redoStack.push(current);
-      const previous = undoStack[undoStack.length - 1];
-      applyState(previous);
-    }
-
-    function redo() {
-      if (!redoStack.length) return;
-      const next = redoStack.pop();
-      undoStack.push(next);
-      applyState(next);
-    }
-
-    // --- Carica immagine mostro ---
+    /* ===============================
+       CARICAMENTO IMMAGINE MOSTRO
+       =============================== */
     fileInput.addEventListener('change', function () {
       const file = this.files[0];
       if (!file) return;
@@ -516,66 +761,412 @@
       reader.readAsDataURL(file);
     });
 
-    // --- Salva / Carica su localStorage ---
-    const STORAGE_KEY = 'monsterSheetState_v1';
-
-    function saveToLocal() {
-      const state = undoStack[undoStack.length - 1] || getState();
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        alert('Scheda salvata nel browser.');
-      } catch (e) {
-        alert('Errore nel salvataggio (localStorage pieno o bloccato).');
-      }
-    }
-
-    function loadFromLocal() {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
-        alert('Nessuna scheda salvata trovata.');
-        return;
-      }
-      try {
-        const state = JSON.parse(raw);
-        undoStack = [state];
-        redoStack = [];
-        applyState(state);
-        alert('Scheda caricata.');
-      } catch (e) {
-        alert('Errore nel caricamento dei dati salvati.');
-      }
-    }
-
-    // --- Export PDF (usa stampa del browser) ---
+    /* ===============================
+       EXPORT PDF
+       =============================== */
     function exportPDF() {
       window.print(); // da qui scegli "Salva come PDF"
     }
 
-    // --- Toolbar handler ---
+    /* ===============================
+       TOOLBAR EDITOR
+       =============================== */
     document.querySelectorAll('.toolbar .btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const action = btn.dataset.action;
         if (action === 'export') exportPDF();
         else if (action === 'undo') undo();
         else if (action === 'redo') redo();
-        else if (action === 'save') saveToLocal();
-        else if (action === 'load') loadFromLocal();
+        else if (action === 'save') saveCurrentMonster();
+        else if (action === 'library') {
+          showView('library');
+          loadMonstersList();
+        }
       });
     });
 
-    // --- Utility: cursore alla fine ---
-    function placeCaretAtEnd(el) {
-      el.focus();
-      if (typeof window.getSelection != "undefined"
-          && typeof document.createRange != "undefined") {
-        const range = document.createRange();
-        range.selectNodeContents(el);
-        range.collapse(false);
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-      }
+    /* ===============================
+       DB: IndexedDB (Archivio Mostri)
+       =============================== */
+    const DB_NAME = 'mostroAppDB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'monsters';
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            store.createIndex('name', 'name', { unique: false });
+          }
+        };
+
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
     }
+
+    async function saveMonsterToDB(monster) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.put(monster);
+        request.onsuccess = () => resolve(true);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function getMonsterFromDB(id) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.get(id);
+        request.onsuccess = () => resolve(request.result || null);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function deleteMonsterFromDB(id) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.delete(id);
+        request.onsuccess = () => resolve(true);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function getAllMonstersFromDB() {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const monsters = [];
+
+        const request = store.openCursor();
+        request.onsuccess = (event) => {
+          const cursor = event.target.result;
+          if (cursor) {
+            monsters.push(cursor.value);
+            cursor.continue();
+          } else {
+            resolve(monsters);
+          }
+        };
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    /* ===============================
+       MODELLO MOSTRO <-> EDITOR
+       =============================== */
+    function getEditorText(el) {
+      return el ? el.textContent.trim() : '';
+    }
+
+    function getCurrentMonsterObject() {
+      const headerEl   = document.querySelector('.monster-header');
+      const subtitleEl = document.querySelector('.monster-subtitle');
+
+      const name = getEditorText(headerEl) || 'Mostro senza nome';
+      const typeLine = getEditorText(subtitleEl) || '';
+
+      const now = Date.now();
+
+      return {
+        id: currentMonsterId || ('m_' + now),
+        name,
+        typeLine,
+        cr: '', // potremo gestire il CR in seguito
+        createdAt: currentMonsterId ? undefined : now,
+        updatedAt: now,
+        html: {
+          header: document.querySelector('.monster-header')?.innerHTML || '',
+          subtitle: document.querySelector('.monster-subtitle')?.innerHTML || '',
+          lore: document.querySelector('.monster-lore')?.innerHTML || '',
+          stats: document.querySelector('.stat-block')?.innerHTML || ''
+        },
+        imageDataUrl: img.src || ''
+      };
+    }
+
+    function loadMonsterIntoEditor(monster) {
+      currentMonsterId = monster.id || null;
+
+      const state = {
+        contents: {
+          '.monster-header': monster.html?.header || 'Nome del Mostro',
+          '.monster-subtitle': monster.html?.subtitle || 'Taglia media, mostruosità, neutrale malvagio',
+          '.monster-lore': monster.html?.lore || '',
+          '.stat-block': monster.html?.stats || ''
+        },
+        imgSrc: monster.imageDataUrl || ''
+      };
+
+      applyState(state);
+
+      // reset undo/redo con lo stato del mostro
+      undoStack = [getState()];
+      redoStack = [];
+    }
+
+    function resetEditorToDefault() {
+      currentMonsterId = null;
+      const defaultState = {
+        contents: {
+          '.monster-header': 'Nome del Mostro',
+          '.monster-subtitle': 'Taglia media, mostruosità, neutrale malvagio',
+          '.monster-lore': `
+            <p>
+              Scrivi qui la descrizione narrativa del mostro: origine, comportamento,
+              territorio, leggende e qualsiasi dettaglio utile al master.
+            </p>
+            <p>
+              Questa sezione è completamente editabile: clicca e scrivi come in un documento.
+            </p>
+          `,
+          '.stat-block': `
+            <div class="stat-title">
+              Blocco statistiche
+            </div>
+
+            <div class="stat-row">
+              <span class="section-label">Classe Armatura</span> 15 (pelle coriacea)<br>
+              <span class="section-label">Punti Ferita</span> 68 (8d10 + 24)<br>
+              <span class="section-label">Velocità</span> 9 m
+            </div>
+
+            <div class="stat-row">
+              <div class="ability-grid">
+                <div class="ability"><span>FOR</span><span class="score">16 (+3)</span></div>
+                <div class="ability"><span>DES</span><span class="score">14 (+2)</span></div>
+                <div class="ability"><span>COS</span><span class="score">16 (+3)</span></div>
+                <div class="ability"><span>INT</span><span class="score">8 (-1)</span></div>
+                <div class="ability"><span>SAG</span><span class="score">12 (+1)</span></div>
+                <div class="ability"><span>CAR</span><span class="score">10 (+0)</span></div>
+              </div>
+            </div>
+
+            <div class="stat-row">
+              <span class="section-label">Tiri Salvezza</span> DES +4, COS +5<br>
+              <span class="section-label">Abilità</span> Percezione +3, Furtività +4<br>
+              <span class="section-label">Sensi</span> scurovisione 18 m, Percezione passiva 13<br>
+              <span class="section-label">Linguaggi</span> —<br>
+              <span class="section-label">Grado di Sfida</span> 4 (1.100 PE)
+            </div>
+
+            <div class="stat-row">
+              <div class="trait">
+                <span class="trait-name">Fiuto del Predatore.</span>
+                Testo abilità speciale…
+              </div>
+              <div class="trait">
+                <span class="trait-name">Agguato.</span>
+                Testo abilità speciale…
+              </div>
+            </div>
+
+            <div class="stat-row">
+              <span class="section-label">Azioni</span>
+              <div class="action">
+                <span class="action-name">Multiattacco.</span>
+                Testo azione…
+              </div>
+              <div class="action">
+                <span class="action-name">Artigli.</span>
+                Testo attacco…
+              </div>
+            </div>
+          `
+        },
+        imgSrc: ''
+      };
+
+      applyState(defaultState);
+      undoStack = [getState()];
+      redoStack = [];
+    }
+
+    async function saveCurrentMonster() {
+      const monster = getCurrentMonsterObject();
+
+      // preserva createdAt se esiste già
+      if (currentMonsterId && !monster.createdAt) {
+        const existing = await getMonsterFromDB(currentMonsterId);
+        if (existing && existing.createdAt) {
+          monster.createdAt = existing.createdAt;
+        } else {
+          monster.createdAt = Date.now();
+        }
+      } else if (!monster.createdAt) {
+        monster.createdAt = Date.now();
+      }
+
+      await saveMonsterToDB(monster);
+      currentMonsterId = monster.id;
+
+      // aggiorna undo stack allo stato salvato
+      undoStack = [getState()];
+      redoStack = [];
+
+      alert('Mostro salvato.');
+      await loadMonstersList();
+    }
+
+    /* ===============================
+       LIBRERIA: LISTA MOSTRI
+       =============================== */
+    function formatDate(ts) {
+      if (!ts) return '';
+      const d = new Date(ts);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+
+    async function loadMonstersList() {
+      const all = await getAllMonstersFromDB();
+      const term = monsterSearchInput.value.trim().toLowerCase();
+
+      let monsters = all;
+
+      if (term) {
+        monsters = all.filter(m => {
+          const name = (m.name || '').toLowerCase();
+          const typeLine = (m.typeLine || '').toLowerCase();
+          return name.includes(term) || typeLine.includes(term);
+        });
+      }
+
+      // Ordina per updatedAt desc
+      monsters.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+
+      monsterListEl.innerHTML = '';
+
+      if (!monsters.length) {
+        monsterEmptyEl.style.display = 'block';
+        return;
+      }
+      monsterEmptyEl.style.display = 'none';
+
+      monsters.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'monster-card';
+        card.dataset.id = m.id;
+
+        const main = document.createElement('div');
+        main.className = 'monster-card-main';
+
+        const title = document.createElement('div');
+        title.className = 'monster-card-title';
+        title.textContent = m.name || 'Mostro senza nome';
+
+        const subtitle = document.createElement('div');
+        subtitle.className = 'monster-card-subtitle';
+        subtitle.textContent = m.typeLine || '';
+
+        const meta = document.createElement('div');
+        meta.className = 'monster-card-meta';
+        meta.textContent = 'Ultima modifica: ' + formatDate(m.updatedAt);
+
+        main.appendChild(title);
+        main.appendChild(subtitle);
+        main.appendChild(meta);
+
+        const actions = document.createElement('div');
+        actions.className = 'monster-card-actions';
+
+        const btnOpen = document.createElement('button');
+        btnOpen.textContent = 'Apri';
+        btnOpen.dataset.action = 'open';
+        btnOpen.dataset.id = m.id;
+
+        const btnDup = document.createElement('button');
+        btnDup.textContent = 'Duplica';
+        btnDup.dataset.action = 'dup';
+        btnDup.dataset.id = m.id;
+
+        const btnDel = document.createElement('button');
+        btnDel.textContent = 'Elimina';
+        btnDel.dataset.action = 'del';
+        btnDel.dataset.id = m.id;
+
+        actions.appendChild(btnOpen);
+        actions.appendChild(btnDup);
+        actions.appendChild(btnDel);
+
+        card.appendChild(main);
+        card.appendChild(actions);
+
+        monsterListEl.appendChild(card);
+      });
+    }
+
+    monsterSearchInput.addEventListener('input', () => {
+      loadMonstersList();
+    });
+
+    // Click sulla lista (event delegation)
+    monsterListEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+      if (!id) return;
+
+      if (action === 'open') {
+        const monster = await getMonsterFromDB(id);
+        if (!monster) {
+          alert('Mostro non trovato.');
+          return;
+        }
+        loadMonsterIntoEditor(monster);
+        showView('editor');
+      } else if (action === 'dup') {
+        const monster = await getMonsterFromDB(id);
+        if (!monster) {
+          alert('Mostro non trovato.');
+          return;
+        }
+        const now = Date.now();
+        monster.id = 'm_' + now;
+        monster.name = monster.name + ' (copia)';
+        monster.createdAt = now;
+        monster.updatedAt = now;
+        await saveMonsterToDB(monster);
+        await loadMonstersList();
+      } else if (action === 'del') {
+        const ok = confirm('Sei sicuro di voler eliminare questo mostro?');
+        if (!ok) return;
+        await deleteMonsterFromDB(id);
+        if (currentMonsterId === id) {
+          currentMonsterId = null;
+        }
+        await loadMonstersList();
+      }
+    });
+
+    // Pulsante "Nuovo mostro"
+    document.getElementById('btn-new-monster').addEventListener('click', () => {
+      resetEditorToDefault();
+      showView('editor');
+    });
+
+    /* ===============================
+       AVVIO APP
+       =============================== */
+    (async function initApp() {
+      // Mostra libreria e carica lista
+      showView('library');
+      await loadMonstersList();
+    })();
   </script>
 
 </body>
