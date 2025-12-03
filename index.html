@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bestiario - Template Mostro</title>
+
+  <!-- Per mobile / app-like -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#2a1a12">
+
+  <!-- Manifest PWA -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- FONT (stile fantasy) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      min-height: 100%;
+    }
+
+    body {
+      background: #2a1a12;  /* sfondo esterno scuro (solo video) */
+      font-family: "Crimson Text", serif;
+      padding: 20px 0;
+    }
+
+    /* FOGLIO PERGAMENA CENTRALE – A4 FISSO */
+    .page {
+      width: 210mm;
+      height: 297mm;
+      padding: 15mm;
+      background: url("pergamena.jpg") center center / cover no-repeat;
+      border: 1px solid #5b3c22;
+      box-shadow: 0 0 20px rgba(0,0,0,0.6);
+
+      display: flex;
+      flex-direction: column;
+
+      margin: 0 auto;
+
+      /* niente contenuti che escono dal foglio */
+      overflow: hidden;
+    }
+
+    /* TOOLBAR IN ALTO */
+    .toolbar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-bottom: 5mm;
+      font-size: 11px;
+      flex: 0 0 auto;
+    }
+
+    .btn,
+    .toolbar label {
+      background: rgba(40, 20, 12, 0.85);
+      color: #f7e4c4;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 1px solid #d2a569;
+      font-size: 11px;
+    }
+
+    .btn:hover,
+    .toolbar label:hover {
+      background: rgba(60, 30, 18, 0.9);
+    }
+
+    .toolbar input[type="file"] {
+      display: none;
+    }
+
+    /* layout due colonne che occupano il resto della pagina */
+    .monster-layout {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      gap: 10mm;
+      flex: 1 1 auto;
+    }
+
+    /* COLONNA SINISTRA: area scrivibile “chiusa” */
+    .left-column {
+      position: relative;
+      flex: 0 0 60%;      /* circa metà pagina */
+      max-width: 60%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 4mm;
+
+      /* il testo non può uscire fuori dalla sua area */
+      overflow: hidden;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: normal;
+    }
+
+    /* COLONNA DESTRA: solo immagine */
+    .right-column {
+      flex: 1;
+      position: relative;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Aree editabili: solo un bordo leggero, niente sfondi scuri */
+    [contenteditable="true"] {
+      cursor: text;
+    }
+
+    [contenteditable="true"]:hover {
+      outline: 1px dashed rgba(0,0,0,0.35);
+    }
+
+    [contenteditable="true"]:focus {
+      outline: 1px solid rgba(0,0,0,0.6);
+      background-color: rgba(255,255,255,0.02);
+    }
+
+    /* HEADER MOSTRO */
+    .monster-header {
+      font-family: "Cinzel", serif;
+      padding: 6px 8px;
+      background: rgba(120, 46, 28, 0.95);
+      border: 1px solid #3b1c10;
+      color: #fdf4dc;
+      font-size: 20px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .monster-subtitle {
+      padding: 2px 8px 0;
+      font-style: italic;
+      font-size: 11px;
+    }
+
+    /* LORE / DESCRIZIONE */
+    .monster-lore {
+      padding: 4px 8px;
+      font-size: 12px;
+      line-height: 1.4;
+      text-align: justify;
+
+      overflow: hidden;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .monster-lore p + p {
+      margin-top: 4px;
+    }
+
+    /* STAT BLOCK */
+    .stat-block {
+      margin-top: 2px;
+      border-top: 4px solid #7b3b1b;
+      border-bottom: 2px solid #7b3b1b;
+      background: rgba(252, 244, 220, 0.96);
+      font-size: 11px;
+
+      overflow: hidden;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .stat-title {
+      background: #cfa46a;
+      border-bottom: 1px solid #7b3b1b;
+      padding: 4px 8px;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+
+    .stat-row {
+      padding: 4px 8px;
+      border-bottom: 1px solid rgba(123, 59, 27, 0.25);
+    }
+
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .ability-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 2px;
+      margin-top: 4px;
+    }
+
+    .ability {
+      text-align: center;
+      font-size: 10px;
+    }
+
+    .ability span {
+      display: block;
+    }
+
+    .ability span.score {
+      font-weight: bold;
+      margin-top: 1px;
+    }
+
+    .section-label {
+      font-variant: small-caps;
+      font-weight: bold;
+    }
+
+    .trait-name,
+    .action-name {
+      font-weight: bold;
+      font-style: italic;
+    }
+
+    .trait + .trait,
+    .action + .action {
+      margin-top: 2px;
+    }
+
+    /* IMMAGINE MOSTRO A DESTRA */
+    .monster-art-wrapper {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+    }
+
+    #monster-art {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* =========================
+       STILI DI STAMPA / PDF
+       ========================= */
+
+    /* Imposta il foglio di stampa come A4 senza margini */
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    @media print {
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: none; /* niente sfondo esterno */
+      }
+
+      /* nasconde la toolbar nel PDF */
+      .toolbar {
+        display: none !important;
+      }
+
+      /* la pagina deve occupare TUTTO il foglio, senza bordi/ombre */
+      .page {
+        margin: 0;              /* niente margine orizzontale */
+        border: none;           /* niente bordo */
+        box-shadow: none;       /* niente ombra */
+        width: 210mm;
+        height: 297mm;
+        padding: 15mm;          /* margini interni di layout */
+        background: url("pergamena.jpg") center center / cover no-repeat;
+      }
+    }
+  </style>
+
+  <!-- Registrazione Service Worker per modalità app/offline -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('service-worker.js')
+          .catch(function (err) {
+            console.warn('Service worker non registrato:', err);
+          });
+      });
+    }
+  </script>
+</head>
+<body>
+
+  <div class="page" id="page">
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <button type="button" class="btn" data-action="export">Esporta PDF</button>
+      <button type="button" class="btn" data-action="undo">Undo</button>
+      <button type="button" class="btn" data-action="redo">Redo</button>
+
+      <label>
+        Carica immagine
+        <input type="file" id="imageUpload" accept="image/*">
+      </label>
+
+      <button type="button" class="btn" data-action="save">Salva</button>
+      <button type="button" class="btn" data-action="load">Carica</button>
+    </div>
+
+    <div class="monster-layout">
+
+      <!-- COLONNA SINISTRA: TUTTA EDITABILE -->
+      <section class="left-column">
+
+        <header class="monster-header" contenteditable="true">
+          Nome del Mostro
+        </header>
+
+        <div class="monster-subtitle" contenteditable="true">
+          Taglia media, mostruosità, neutrale malvagio
+        </div>
+
+        <section class="monster-lore" contenteditable="true">
+          <p>
+            Scrivi qui la descrizione narrativa del mostro: origine, comportamento,
+            territorio, leggende e qualsiasi dettaglio utile al master.
+          </p>
+          <p>
+            Questa sezione è completamente editabile: clicca e scrivi come in un documento.
+          </p>
+        </section>
+
+        <section class="stat-block" contenteditable="true">
+          <div class="stat-title">
+            Blocco statistiche
+          </div>
+
+          <div class="stat-row">
+            <span class="section-label">Classe Armatura</span> 15 (pelle coriacea)<br>
+            <span class="section-label">Punti Ferita</span> 68 (8d10 + 24)<br>
+            <span class="section-label">Velocità</span> 9 m
+          </div>
+
+          <div class="stat-row">
+            <div class="ability-grid">
+              <div class="ability"><span>FOR</span><span class="score">16 (+3)</span></div>
+              <div class="ability"><span>DES</span><span class="score">14 (+2)</span></div>
+              <div class="ability"><span>COS</span><span class="score">16 (+3)</span></div>
+              <div class="ability"><span>INT</span><span class="score">8 (-1)</span></div>
+              <div class="ability"><span>SAG</span><span class="score">12 (+1)</span></div>
+              <div class="ability"><span>CAR</span><span class="score">10 (+0)</span></div>
+            </div>
+          </div>
+
+          <div class="stat-row">
+            <span class="section-label">Tiri Salvezza</span> DES +4, COS +5<br>
+            <span class="section-label">Abilità</span> Percezione +3, Furtività +4<br>
+            <span class="section-label">Sensi</span> scurovisione 18 m, Percezione passiva 13<br>
+            <span class="section-label">Linguaggi</span> —<br>
+            <span class="section-label">Grado di Sfida</span> 4 (1.100 PE)
+          </div>
+
+          <div class="stat-row">
+            <div class="trait">
+              <span class="trait-name">Fiuto del Predatore.</span>
+              Testo abilità speciale…
+            </div>
+            <div class="trait">
+              <span class="trait-name">Agguato.</span>
+              Testo abilità speciale…
+            </div>
+          </div>
+
+          <div class="stat-row">
+            <span class="section-label">Azioni</span>
+            <div class="action">
+              <span class="action-name">Multiattacco.</span>
+              Testo azione…
+            </div>
+            <div class="action">
+              <span class="action-name">Artigli.</span>
+              Testo attacco…
+            </div>
+          </div>
+        </section>
+
+      </section>
+
+      <!-- COLONNA DESTRA: IMMAGINE MOSTRO -->
+      <aside class="right-column">
+        <div class="monster-art-wrapper">
+          <img id="monster-art" src="" alt="Illustrazione del mostro">
+        </div>
+      </aside>
+
+    </div>
+  </div>
+
+  <script>
+    const page = document.getElementById('page');
+    const img = document.getElementById('monster-art');
+    const fileInput = document.getElementById('imageUpload');
+
+    const editableSelectors = [
+      '.monster-header',
+      '.monster-subtitle',
+      '.monster-lore',
+      '.stat-block'
+    ];
+    const editableAreas = editableSelectors
+      .map(sel => document.querySelector(sel))
+      .filter(Boolean);
+
+    let isRestoring = false;
+    let undoStack = [];
+    let redoStack = [];
+
+    // --- Utility: stato corrente ---
+    function getState() {
+      const contents = {};
+      editableSelectors.forEach(sel => {
+        const el = document.querySelector(sel);
+        contents[sel] = el ? el.innerHTML : '';
+      });
+      return {
+        contents,
+        imgSrc: img.src || ''
+      };
+    }
+
+    function applyState(state) {
+      if (!state) return;
+      isRestoring = true;
+      Object.entries(state.contents).forEach(([sel, html]) => {
+        const el = document.querySelector(sel);
+        if (el) {
+          el.innerHTML = html;
+          el.dataset.lastContent = html;
+        }
+      });
+      img.src = state.imgSrc || '';
+      isRestoring = false;
+    }
+
+    function snapshot() {
+      const state = getState();
+      undoStack.push(state);
+      if (undoStack.length > 50) undoStack.shift(); // limita la memoria
+      redoStack = []; // ogni nuova modifica invalida il redo
+    }
+
+    // --- BLOCCO OLTRE A4 + gestione stato per ogni campo ---
+    editableAreas.forEach(area => {
+      area.dataset.lastContent = area.innerHTML;
+
+      area.addEventListener('focus', () => {
+        area.dataset.lastContent = area.innerHTML;
+      });
+
+      area.addEventListener('input', () => {
+        if (isRestoring) return;
+
+        const overflows = page.scrollHeight > page.clientHeight + 1;
+        if (overflows) {
+          // supera il limite dell'A4 → torna indietro
+          isRestoring = true;
+          area.innerHTML = area.dataset.lastContent;
+          placeCaretAtEnd(area);
+          isRestoring = false;
+        } else {
+          area.dataset.lastContent = area.innerHTML;
+        }
+      });
+
+      area.addEventListener('blur', () => {
+        if (isRestoring) return;
+        snapshot();
+      });
+    });
+
+    // Snapshot iniziale
+    snapshot();
+
+    // --- Undo / Redo ---
+    function undo() {
+      if (undoStack.length <= 1) return;
+      const current = undoStack.pop();
+      redoStack.push(current);
+      const previous = undoStack[undoStack.length - 1];
+      applyState(previous);
+    }
+
+    function redo() {
+      if (!redoStack.length) return;
+      const next = redoStack.pop();
+      undoStack.push(next);
+      applyState(next);
+    }
+
+    // --- Carica immagine mostro ---
+    fileInput.addEventListener('change', function () {
+      const file = this.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        img.src = e.target.result;
+        snapshot(); // nuovo stato con immagine aggiornata
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // --- Salva / Carica su localStorage ---
+    const STORAGE_KEY = 'monsterSheetState_v1';
+
+    function saveToLocal() {
+      const state = undoStack[undoStack.length - 1] || getState();
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        alert('Scheda salvata nel browser.');
+      } catch (e) {
+        alert('Errore nel salvataggio (localStorage pieno o bloccato).');
+      }
+    }
+
+    function loadFromLocal() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        alert('Nessuna scheda salvata trovata.');
+        return;
+      }
+      try {
+        const state = JSON.parse(raw);
+        undoStack = [state];
+        redoStack = [];
+        applyState(state);
+        alert('Scheda caricata.');
+      } catch (e) {
+        alert('Errore nel caricamento dei dati salvati.');
+      }
+    }
+
+    // --- Export PDF (usa stampa del browser) ---
+    function exportPDF() {
+      window.print(); // da qui scegli "Salva come PDF"
+    }
+
+    // --- Toolbar handler ---
+    document.querySelectorAll('.toolbar .btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.action;
+        if (action === 'export') exportPDF();
+        else if (action === 'undo') undo();
+        else if (action === 'redo') redo();
+        else if (action === 'save') saveToLocal();
+        else if (action === 'load') loadFromLocal();
+      });
+    });
+
+    // --- Utility: cursore alla fine ---
+    function placeCaretAtEnd(el) {
+      el.focus();
+      if (typeof window.getSelection != "undefined"
+          && typeof document.createRange != "undefined") {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }
+  </script>
+
+</body>
+</html>
