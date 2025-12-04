@@ -78,6 +78,7 @@
       display: flex;
       gap: 6px;
       align-items: center;
+      flex-wrap: wrap;
     }
 
     .lib-btn {
@@ -92,6 +93,20 @@
 
     .lib-btn:hover {
       background: rgba(60, 30, 18, 0.9);
+    }
+
+    .template-select-label {
+      font-size: 11px;
+      color: #f7e4c4;
+    }
+
+    #template-select {
+      background: #2a1a12;
+      color: #f7e4c4;
+      border: 1px solid #5b3c22;
+      border-radius: 4px;
+      padding: 3px 6px;
+      font-size: 11px;
     }
 
     .library-search {
@@ -198,7 +213,6 @@
          VISTA EDITOR
        ================ */
 
-    /* FOGLIO PERGAMENA CENTRALE – A4 FISSO */
     .page {
       width: 210mm;
       height: 297mm;
@@ -209,14 +223,12 @@
 
       display: flex;
       flex-direction: column;
-
       margin: 0 auto;
-
-      /* niente contenuti che escono dal foglio */
       overflow: hidden;
+
+      color: #2a1208;
     }
 
-    /* TOOLBAR IN ALTO (EDITOR) */
     .toolbar {
       display: flex;
       justify-content: flex-end;
@@ -224,6 +236,7 @@
       margin-bottom: 5mm;
       font-size: 11px;
       flex: 0 0 auto;
+      flex-wrap: wrap;
     }
 
     .btn,
@@ -246,7 +259,6 @@
       display: none;
     }
 
-    /* layout due colonne che occupano il resto della pagina */
     .monster-layout {
       display: flex;
       width: 100%;
@@ -255,24 +267,21 @@
       flex: 1 1 auto;
     }
 
-    /* COLONNA SINISTRA: area scrivibile “chiusa” */
     .left-column {
       position: relative;
-      flex: 0 0 60%;      /* circa metà pagina */
+      flex: 0 0 60%;
       max-width: 60%;
       height: 100%;
       display: flex;
       flex-direction: column;
       gap: 4mm;
 
-      /* il testo non può uscire fuori dalla sua area */
       overflow: hidden;
       word-wrap: break-word;
       overflow-wrap: break-word;
       white-space: normal;
     }
 
-    /* COLONNA DESTRA: solo immagine */
     .right-column {
       flex: 1;
       position: relative;
@@ -280,7 +289,6 @@
       overflow: hidden;
     }
 
-    /* Aree editabili: solo un bordo leggero, niente sfondi scuri */
     [contenteditable="true"] {
       cursor: text;
     }
@@ -294,7 +302,6 @@
       background-color: rgba(255,255,255,0.02);
     }
 
-    /* HEADER MOSTRO */
     .monster-header {
       font-family: "Cinzel", serif;
       padding: 6px 8px;
@@ -312,7 +319,6 @@
       font-size: 11px;
     }
 
-    /* LORE / DESCRIZIONE */
     .monster-lore {
       padding: 4px 8px;
       font-size: 12px;
@@ -328,7 +334,6 @@
       margin-top: 4px;
     }
 
-    /* STAT BLOCK */
     .stat-block {
       margin-top: 2px;
       border-top: 4px solid #7b3b1b;
@@ -339,6 +344,7 @@
       overflow: hidden;
       word-wrap: break-word;
       overflow-wrap: break-word;
+      color: #2a1208;
     }
 
     .stat-title {
@@ -396,7 +402,6 @@
       margin-top: 2px;
     }
 
-    /* IMMAGINE MOSTRO A DESTRA */
     .monster-art-wrapper {
       position: absolute;
       inset: 0;
@@ -413,11 +418,6 @@
       display: block;
     }
 
-    /* =========================
-       STILI DI STAMPA / PDF
-       ========================= */
-
-    /* Imposta il foglio di stampa come A4 senza margini */
     @page {
       size: A4;
       margin: 0;
@@ -427,10 +427,9 @@
       html, body {
         margin: 0;
         padding: 0;
-        background: none; /* niente sfondo esterno */
+        background: none;
       }
 
-      /* nasconde libreria e toolbar nel PDF */
       #view-library {
         display: none !important;
       }
@@ -444,20 +443,23 @@
         margin: 0;
       }
 
-      /* la pagina deve occupare TUTTO il foglio, senza bordi/ombre */
       .page {
-        margin: 0;              /* niente margine orizzontale */
-        border: none;           /* niente bordo */
-        box-shadow: none;       /* niente ombra */
+        margin: 0;
+        border: none;
+        box-shadow: none;
         width: 210mm;
         height: 297mm;
-        padding: 15mm;          /* margini interni di layout */
+        padding: 15mm;
         background: url("pergamena.jpg") center center / cover no-repeat;
       }
     }
   </style>
 
-  <!-- Registrazione Service Worker per modalità app/offline -->
+  <!-- Librerie per export immagine e ZIP -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+  <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
@@ -480,8 +482,14 @@
           <div class="library-subtitle">Archivio dei mostri del master</div>
         </div>
         <div class="library-actions">
+          <span class="template-select-label">Template:</span>
+          <select id="template-select">
+            <option value="standard">Mostro standard</option>
+            <option value="boss">Boss / Leggendario</option>
+            <option value="npc">PNG importante</option>
+            <option value="minion">Minion / Branco</option>
+          </select>
           <button type="button" class="lib-btn" id="btn-new-monster">Nuovo mostro</button>
-          <!-- In futuro: esporta/importa archivio -->
         </div>
       </div>
 
@@ -489,21 +497,26 @@
         <input type="text" id="monster-search" placeholder="Cerca per nome o tipo...">
       </div>
 
-      <div id="monster-list" class="monster-list">
-        <!-- Popolato via JS -->
-      </div>
+      <div id="monster-list" class="monster-list"></div>
       <div id="monster-empty" class="monster-empty" style="display:none;">
         Nessun mostro salvato. Crea il tuo primo mostro con il pulsante “Nuovo mostro”.
       </div>
     </div>
   </div>
 
-  <!-- VISTA EDITOR (FOGLIO PERGAMENA) -->
+  <!-- VISTA EDITOR -->
   <div id="view-editor" style="display:none;">
     <div class="page" id="page">
-      <!-- TOOLBAR -->
       <div class="toolbar">
         <button type="button" class="btn" data-action="export">Esporta PDF</button>
+        <button type="button" class="btn" data-action="export-png">Esporta PNG</button>
+        <button type="button" class="btn" data-action="export-json">Esporta JSON</button>
+        <label>
+          Importa JSON
+          <input type="file" id="jsonUpload" accept="application/json">
+        </label>
+        <button type="button" class="btn" data-action="export-zip">Esporta ZIP</button>
+
         <button type="button" class="btn" data-action="undo">Undo</button>
         <button type="button" class="btn" data-action="redo">Redo</button>
 
@@ -512,15 +525,20 @@
           <input type="file" id="imageUpload" accept="image/*">
         </label>
 
+        <button type="button" class="btn" data-action="add-trait">+ Tratto</button>
+        <button type="button" class="btn" data-action="add-multi">+ Multiattacco</button>
+        <button type="button" class="btn" data-action="add-action">+ Azione</button>
+        <button type="button" class="btn" data-action="add-legendary">+ Az. leggendaria</button>
+        <button type="button" class="btn" data-action="add-reaction">+ Reazione</button>
+
+        <button type="button" class="btn" data-action="text-dark">Testo scuro</button>
+
         <button type="button" class="btn" data-action="save">Salva mostro</button>
         <button type="button" class="btn" data-action="library">Libreria</button>
       </div>
 
       <div class="monster-layout">
-
-        <!-- COLONNA SINISTRA: TUTTA EDITABILE -->
         <section class="left-column">
-
           <header class="monster-header" contenteditable="true">
             Nome del Mostro
           </header>
@@ -592,27 +610,22 @@
               </div>
             </div>
           </section>
-
         </section>
 
-        <!-- COLONNA DESTRA: IMMAGINE MOSTRO -->
         <aside class="right-column">
           <div class="monster-art-wrapper">
             <img id="monster-art" src="" alt="Illustrazione del mostro">
           </div>
         </aside>
-
       </div>
     </div>
   </div>
 
   <script>
-    /* ===============================
-       VARIABILI GLOBALI / ELEMENTI
-       =============================== */
     const page = document.getElementById('page');
     const img = document.getElementById('monster-art');
     const fileInput = document.getElementById('imageUpload');
+    const jsonInput = document.getElementById('jsonUpload');
 
     const editableSelectors = [
       '.monster-header',
@@ -627,17 +640,16 @@
     let isRestoring = false;
     let undoStack = [];
     let redoStack = [];
-    let currentMonsterId = null;  // null = nuovo mostro
+    let currentMonsterId = null;
+    let currentTemplateId = 'standard';
 
     const viewLibrary = document.getElementById('view-library');
     const viewEditor  = document.getElementById('view-editor');
     const monsterListEl = document.getElementById('monster-list');
     const monsterEmptyEl = document.getElementById('monster-empty');
     const monsterSearchInput = document.getElementById('monster-search');
+    const templateSelectEl = document.getElementById('template-select');
 
-    /* ===============================
-       FUNZIONI DI VISTA
-       =============================== */
     function showView(name) {
       if (name === 'library') {
         viewLibrary.style.display = 'block';
@@ -648,9 +660,6 @@
       }
     }
 
-    /* ===============================
-       STATO EDITOR (già esistente)
-       =============================== */
     function getState() {
       const contents = {};
       editableSelectors.forEach(sel => {
@@ -680,8 +689,8 @@
     function snapshot() {
       const state = getState();
       undoStack.push(state);
-      if (undoStack.length > 50) undoStack.shift(); // limita la memoria
-      redoStack = []; // ogni nuova modifica invalida il redo
+      if (undoStack.length > 50) undoStack.shift();
+      redoStack = [];
     }
 
     function undo() {
@@ -712,9 +721,20 @@
       }
     }
 
-    /* ===============================
-       BLOCCO OLTRE LIMITE A4
-       =============================== */
+    function placeCaretInElement(el) {
+      if (!el) return;
+      el.focus();
+      if (typeof window.getSelection != "undefined"
+          && typeof document.createRange != "undefined") {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(true);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }
+
     editableAreas.forEach(area => {
       area.dataset.lastContent = area.innerHTML;
 
@@ -727,7 +747,6 @@
 
         const overflows = page.scrollHeight > page.clientHeight + 1;
         if (overflows) {
-          // supera il limite dell'A4 → torna indietro
           isRestoring = true;
           area.innerHTML = area.dataset.lastContent;
           placeCaretAtEnd(area);
@@ -743,12 +762,8 @@
       });
     });
 
-    // Snapshot iniziale
     snapshot();
 
-    /* ===============================
-       CARICAMENTO IMMAGINE MOSTRO
-       =============================== */
     fileInput.addEventListener('change', function () {
       const file = this.files[0];
       if (!file) return;
@@ -756,25 +771,156 @@
       const reader = new FileReader();
       reader.onload = function (e) {
         img.src = e.target.result;
-        snapshot(); // nuovo stato con immagine aggiornata
+        snapshot();
       };
       reader.readAsDataURL(file);
     });
 
-    /* ===============================
-       EXPORT PDF
-       =============================== */
+    jsonInput.addEventListener('change', handleJsonImport);
+
     function exportPDF() {
-      window.print(); // da qui scegli "Salva come PDF"
+      window.print();
     }
 
-    /* ===============================
-       TOOLBAR EDITOR
-       =============================== */
+    function downloadFromDataUrl(dataUrl, filename) {
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    async function capturePageAsPngDataUrl(scale) {
+      if (typeof html2canvas === 'undefined') {
+        alert('Funzione di esportazione immagine non disponibile.');
+        throw new Error('html2canvas missing');
+      }
+      const canvas = await html2canvas(page, {
+        scale: scale,
+        backgroundColor: null,
+        useCORS: true
+      });
+      return canvas.toDataURL('image/png');
+    }
+
+    function dataURLToBlob(dataUrl) {
+      const parts = dataUrl.split(',');
+      const mimeMatch = parts[0].match(/:(.*?);/);
+      const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+      const bstr = atob(parts[1]);
+      let n = bstr.length;
+      const u8 = new Uint8Array(n);
+      while (n--) {
+        u8[n] = bstr.charCodeAt(n);
+      }
+      return new Blob([u8], { type: mime });
+    }
+
+    async function exportPngWithChoice() {
+      const ok = window.confirm(
+        'Vuoi scaricare la versione NITIDA?\n\nOK = Nitida (file più pesante)\nAnnulla = Bilanciata (file più leggero)'
+      );
+      const scale = ok ? 3 : 2;
+      try {
+        const dataUrl = await capturePageAsPngDataUrl(scale);
+        const monster = getCurrentMonsterObject();
+        const safeName = (monster.name || 'mostro').replace(/[^a-z0-9_\-]+/gi, '_');
+        downloadFromDataUrl(dataUrl, safeName + '.png');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function exportMonsterJson() {
+      const monster = getCurrentMonsterObject();
+      const json = JSON.stringify(monster, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const safeName = (monster.name || 'mostro').replace(/[^a-z0-9_\-]+/gi, '_');
+      downloadBlob(blob, safeName + '.json');
+    }
+
+    async function handleJsonImport(evt) {
+      const file = evt.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (!data || !data.html) {
+          alert('File JSON non valido per questo editor.');
+          return;
+        }
+        if (!data.id) {
+          data.id = 'm_' + Date.now();
+        }
+        loadMonsterIntoEditor(data);
+        showView('editor');
+
+        const now = Date.now();
+        const monsterToSave = {
+          ...data,
+          template: data.template || 'standard',
+          updatedAt: now,
+          createdAt: data.createdAt || now
+        };
+        await saveMonsterToDB(monsterToSave);
+        await loadMonstersList();
+      } catch (e) {
+        console.error(e);
+        alert('Errore durante l\'importazione del JSON.');
+      } finally {
+        jsonInput.value = '';
+      }
+    }
+
+    async function exportZipWithChoice() {
+      if (typeof JSZip === 'undefined') {
+        alert('Funzione ZIP non disponibile.');
+        return;
+      }
+      const ok = window.confirm(
+        'Per il pacchetto ZIP vuoi includere la PNG NITIDA?\n\nOK = Nitida\nAnnulla = Bilanciata'
+      );
+      const scale = ok ? 3 : 2;
+      try {
+        const monster = getCurrentMonsterObject();
+        const safeName = (monster.name || 'mostro').replace(/[^a-z0-9_\-]+/gi, '_');
+
+        const zip = new JSZip();
+        const json = JSON.stringify(monster, null, 2);
+        zip.file(safeName + '.json', json);
+
+        const dataUrl = await capturePageAsPngDataUrl(scale);
+        const pngBlob = dataURLToBlob(dataUrl);
+        const arrayBuffer = await pngBlob.arrayBuffer();
+        zip.file(safeName + '.png', arrayBuffer);
+
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        downloadBlob(zipBlob, safeName + '.zip');
+      } catch (e) {
+        console.error(e);
+        alert('Errore durante la creazione dello ZIP.');
+      }
+    }
+
     document.querySelectorAll('.toolbar .btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const action = btn.dataset.action;
         if (action === 'export') exportPDF();
+        else if (action === 'export-png') exportPngWithChoice();
+        else if (action === 'export-json') exportMonsterJson();
+        else if (action === 'export-zip') exportZipWithChoice();
         else if (action === 'undo') undo();
         else if (action === 'redo') redo();
         else if (action === 'save') saveCurrentMonster();
@@ -782,12 +928,99 @@
           showView('library');
           loadMonstersList();
         }
+        else if (action === 'add-trait') {
+          insertStatTemplate('trait');
+        }
+        else if (action === 'add-multi') {
+          insertStatTemplate('multi');
+        }
+        else if (action === 'add-action') {
+          insertStatTemplate('action');
+        }
+        else if (action === 'add-legendary') {
+          insertStatTemplate('legendary');
+        }
+        else if (action === 'add-reaction') {
+          insertStatTemplate('reaction');
+        }
+        else if (action === 'text-dark') {
+          page.style.color = '#2a1208';
+        }
       });
     });
 
-    /* ===============================
-       DB: IndexedDB (Archivio Mostri)
-       =============================== */
+    function insertStatTemplate(type) {
+      const statBlock = document.querySelector('.stat-block');
+      if (!statBlock) return;
+
+      let html = '';
+      let focusSelector = '';
+
+      if (type === 'trait') {
+        html = `
+          <div class="stat-row">
+            <div class="trait">
+              <span class="trait-name">Nome del Tratto.</span>
+              Descrizione del tratto...
+            </div>
+          </div>
+        `;
+        focusSelector = '.stat-row:last-child .trait-name';
+      } else if (type === 'multi') {
+        html = `
+          <div class="stat-row">
+            <div class="action">
+              <span class="action-name">Multiattacco.</span>
+              Il mostro effettua due o più attacchi con le sue armi naturali. <i>(Modifica questo testo)</i>
+            </div>
+          </div>
+        `;
+        focusSelector = '.stat-row:last-child .action-name';
+      } else if (type === 'action') {
+        html = `
+          <div class="stat-row">
+            <div class="action">
+              <span class="action-name">Nome dell'Azione.</span>
+              Attacco in mischia o a distanza con arma: +X al tiro per colpire, portata X m, un bersaglio. <i>(Modifica questo testo)</i>
+            </div>
+          </div>
+        `;
+        focusSelector = '.stat-row:last-child .action-name';
+      } else if (type === 'legendary') {
+        html = `
+          <div class="stat-row">
+            <span class="section-label">Azioni Leggendarie</span>
+            <div class="action">
+              <span class="action-name">Nome Azione Leggendaria.</span>
+              Il mostro compie un'azione leggendaria scegliendo tra le opzioni disponibili. <i>(Modifica questo testo)</i>
+            </div>
+          </div>
+        `;
+        focusSelector = '.stat-row:last-child .action-name';
+      } else if (type === 'reaction') {
+        html = `
+          <div class="stat-row">
+            <span class="section-label">Reazioni</span>
+            <div class="action">
+              <span class="action-name">Nome della Reazione.</span>
+              Descrizione della reazione... <i>(Modifica questo testo)</i>
+            </div>
+          </div>
+        `;
+        focusSelector = '.stat-row:last-child .action-name';
+      }
+
+      statBlock.insertAdjacentHTML('beforeend', html);
+      statBlock.dataset.lastContent = statBlock.innerHTML;
+      snapshot();
+
+      const focusEl = statBlock.querySelector(focusSelector);
+      if (focusEl) {
+        placeCaretInElement(focusEl);
+      }
+    }
+
+    /* IndexedDB */
     const DB_NAME = 'mostroAppDB';
     const DB_VERSION = 1;
     const STORE_NAME = 'monsters';
@@ -863,9 +1096,6 @@
       });
     }
 
-    /* ===============================
-       MODELLO MOSTRO <-> EDITOR
-       =============================== */
     function getEditorText(el) {
       return el ? el.textContent.trim() : '';
     }
@@ -876,14 +1106,14 @@
 
       const name = getEditorText(headerEl) || 'Mostro senza nome';
       const typeLine = getEditorText(subtitleEl) || '';
-
       const now = Date.now();
 
       return {
         id: currentMonsterId || ('m_' + now),
         name,
         typeLine,
-        cr: '', // potremo gestire il CR in seguito
+        template: currentTemplateId || 'standard',
+        cr: '',
         createdAt: currentMonsterId ? undefined : now,
         updatedAt: now,
         html: {
@@ -898,6 +1128,7 @@
 
     function loadMonsterIntoEditor(monster) {
       currentMonsterId = monster.id || null;
+      currentTemplateId = monster.template || 'standard';
 
       const state = {
         contents: {
@@ -910,93 +1141,299 @@
       };
 
       applyState(state);
-
-      // reset undo/redo con lo stato del mostro
       undoStack = [getState()];
       redoStack = [];
     }
 
-    function resetEditorToDefault() {
-      currentMonsterId = null;
-      const defaultState = {
+    function buildDefaultStateByTemplate(templateId) {
+      let header = 'Nome del Mostro';
+      let subtitle = 'Taglia media, mostruosità, neutrale malvagio';
+      let lore = '';
+      let stats = '';
+
+      if (templateId === 'boss') {
+        header = 'Nome del Boss';
+        subtitle = 'Taglia grande, mostruosità, caotico malvagio (leggendario)';
+        lore = `
+          <p>
+            Questo è un boss leggendario, centro di una trama o di uno scontro importante.
+            Descrivi il suo dominio, i suoi obiettivi e perché i personaggi lo affrontano.
+          </p>
+          <p>
+            Aggiungi dettagli scenici: ambiente, effetti speciali, frasi iconiche.
+          </p>
+        `;
+        stats = `
+          <div class="stat-title">
+            Blocco statistiche (Boss)
+          </div>
+
+          <div class="stat-row">
+            <span class="section-label">Classe Armatura</span> 18 (armatura naturale)<br>
+            <span class="section-label">Punti Ferita</span> 200 (16d10 + 96)<br>
+            <span class="section-label">Velocità</span> 9 m
+          </div>
+
+          <div class="stat-row">
+            <div class="ability-grid">
+              <div class="ability"><span>FOR</span><span class="score">22 (+6)</span></div>
+              <div class="ability"><span>DES</span><span class="score">14 (+2)</span></div>
+              <div class="ability"><span>COS</span><span class="score">22 (+6)</span></div>
+              <div class="ability"><span>INT</span><span class="score">16 (+3)</span></div>
+              <div class="ability"><span>SAG</span><span class="score">14 (+2)</span></div>
+              <div class="ability"><span>CAR</span><span class="score">18 (+4)</span></div>
+            </div>
+          </div>
+
+          <div class="stat-row">
+            <span class="section-label">Tiri Salvezza</span> FOR +10, COS +10, SAG +6, CAR +8<br>
+            <span class="section-label">Abilità</span> Percezione +10, Intimidire +8<br>
+            <span class="section-label">Resistenze ai Danni</span> contundente, perforante e tagliente da attacchi non magici<br>
+            <span class="section-label">Immunità alle Condizioni</span> spaventato<br>
+            <span class="section-label">Sensi</span> scurovisione 18 m, Percezione passiva 20<br>
+            <span class="section-label">Linguaggi</span> comuni del mondo<br>
+            <span class="section-label">Grado di Sfida</span> 15 (13.000 PE)
+          </div>
+
+          <div class="stat-row">
+            <div class="trait">
+              <span class="trait-name">Presenza Terrificante.</span>
+              Le creature a scelta entro 18 metri che vedono il boss devono superare un tiro salvezza
+              su Saggezza o restare spaventate per 1 minuto.
+            </div>
+            <div class="trait">
+              <span class="trait-name">Resistenza Leggendaria (3/Giorno).</span>
+              Se il boss fallisce un tiro salvezza, può scegliere di considerarlo riuscito.
+            </div>
+          </div>
+
+          <div class="stat-row">
+            <span class="section-label">Azioni</span>
+            <div class="action">
+              <span class="action-name">Multiattacco.</span>
+              Il boss effettua tre attacchi in mischia.
+            </div>
+            <div class="action">
+              <span class="action-name">Attacco Potente.</span>
+              Descrivi qui un attacco devastante del boss.
+            </div>
+          </div>
+
+          <div class="stat-row">
+            <span class="section-label">Azioni Leggendarie</span>
+            <div class="action">
+              <span class="action-name">Azione Leggendaria di Esempio.</span>
+              Il boss spende un'azione leggendaria per compiere un effetto speciale.
+            </div>
+          </div>
+        `;
+      } else if (templateId === 'npc') {
+        header = 'Nome del PNG';
+        subtitle = 'Umanoide (qualsiasi razza), qualsiasi allineamento';
+        lore = `
+          <p>
+            Questo è un PNG importante: alleato, antagonista o figura chiave della storia.
+            Descrivi personalità, motivazioni, paure e desideri.
+          </p>
+          <p>
+            Aggiungi dettagli su come parla, si muove e che impressione dà ai personaggi.
+          </p>
+        `;
+        stats = `
+          <div class="stat-title">
+            Blocco statistiche (PNG)
+          </div>
+
+          <div class="stat-row">
+            <span class="section-label">Classe Armatura</span> 12 (armatura leggera)<br>
+            <span class="section-label">Punti Ferita</span> 27 (6d8)<br>
+            <span class="section-label">Velocità</span> 9 m
+          </div>
+
+          <div class="stat-row">
+            <div class="ability-grid">
+              <div class="ability"><span>FOR</span><span class="score">10 (+0)</span></div>
+              <div class="ability"><span>DES</span><span class="score">12 (+1)</span></div>
+              <div class="ability"><span>COS</span><span class="score">10 (+0)</span></div>
+              <div class="ability"><span>INT</span><span class="score">14 (+2)</span></div>
+              <div class="ability"><span>SAG</span><span class="score">12 (+1)</span></div>
+              <div class="ability"><span>CAR</span><span class="score">14 (+2)</span></div>
+            </div>
+          </div>
+
+          <div class="stat-row">
+            <span class="section-label">Abilità</span> Persuasione +4, Inganno +4, Intuizione +3<br>
+            <span class="section-label">Sensi</span> Percezione passiva 11<br>
+            <span class="section-label">Linguaggi</span> comuni del mondo<br>
+            <span class="section-label">Grado di Sfida</span> 1 (200 PE)
+          </div>
+
+          <div class="stat-row">
+            <div class="trait">
+              <span class="trait-name">Carisma Naturale.</span>
+              Il PNG ha vantaggio alle prove di Carisma quando tratta con popolazione locale.
+            </div>
+          </div>
+
+          <div class="stat-row">
+            <span class="section-label">Azioni</span>
+            <div class="action">
+              <span class="action-name">Attacco con Arma.</span>
+              Colpo con arma semplice o da mischia, adatto al ruolo del PNG.
+            </div>
+          </div>
+        `;
+      } else if (templateId === 'minion') {
+        header = 'Nome del Minion';
+        subtitle = 'Taglia piccola, mostruosità, neutrale malvagio';
+        lore = `
+          <p>
+            Questa è una creatura da branco o minion: debole singolarmente
+            ma pericolosa in gruppo.
+          </p>
+          <p>
+            Descrivi come si muove in branco, che ruolo ha nello scontro
+            e come reagisce quando viene ferita o il capo viene ucciso.
+          </p>
+        `;
+        stats = `
+          <div class="stat-title">
+            Blocco statistiche (Minion)
+          </div>
+
+          <div class="stat-row">
+            <span class="section-label">Classe Armatura</span> 13 (armatura naturale o cuoio)<br>
+            <span class="section-label">Punti Ferita</span> 7 (2d6)<br>
+            <span class="section-label">Velocità</span> 9 m
+          </div>
+
+          <div class="stat-row">
+            <div class="ability-grid">
+              <div class="ability"><span>FOR</span><span class="score">8 (-1)</span></div>
+              <div class="ability"><span>DES</span><span class="score">14 (+2)</span></div>
+              <div class="ability"><span>COS</span><span class="score">10 (+0)</span></div>
+              <div class="ability"><span>INT</span><span class="score">6 (-2)</span></div>
+              <div class="ability"><span>SAG</span><span class="score">10 (+0)</span></div>
+              <div class="ability"><span>CAR</span><span class="score">8 (-1)</span></div>
+            </div>
+          </div>
+
+          <div class="stat-row">
+            <span class="section-label">Abilità</span> Furtività +4<br>
+            <span class="section-label">Sensi</span> scurovisione 18 m, Percezione passiva 10<br>
+            <span class="section-label">Linguaggi</span> comprende un linguaggio semplice ma non può parlarlo<br>
+            <span class="section-label">Grado di Sfida</span> 1/4 (50 PE)
+          </div>
+
+          <div class="stat-row">
+            <div class="trait">
+              <span class="trait-name">Attacco di Branco.</span>
+              Il minion ha vantaggio ai tiri per colpire se almeno un suo alleato
+              non incapacitato si trova entro 1,5 m dal bersaglio.
+            </div>
+          </div>
+
+          <div class="stat-row">
+            <span class="section-label">Azioni</span>
+            <div class="action">
+              <span class="action-name">Morso o Artigli.</span>
+              Attacco base del minion. Adattalo alla creatura scelta.
+            </div>
+          </div>
+        `;
+      } else {
+        header = 'Nome del Mostro';
+        subtitle = 'Taglia media, mostruosità, neutrale malvagio';
+        lore = `
+          <p>
+            Scrivi qui la descrizione narrativa del mostro: origine, comportamento,
+            territorio, leggende e qualsiasi dettaglio utile al master.
+          </p>
+          <p>
+            Questa sezione è completamente editabile: clicca e scrivi come in un documento.
+          </p>
+        `;
+        stats = `
+          <div class="stat-title">
+            Blocco statistiche
+          </div>
+
+          <div class="stat-row">
+            <span class="section-label">Classe Armatura</span> 15 (pelle coriacea)<br>
+            <span class="section-label">Punti Ferita</span> 68 (8d10 + 24)<br>
+            <span class="section-label">Velocità</span> 9 m
+          </div>
+
+          <div class="stat-row">
+            <div class="ability-grid">
+              <div class="ability"><span>FOR</span><span class="score">16 (+3)</span></div>
+              <div class="ability"><span>DES</span><span class="score">14 (+2)</span></div>
+              <div class="ability"><span>COS</span><span class="score">16 (+3)</span></div>
+              <div class="ability"><span>INT</span><span class="score">8 (-1)</span></div>
+              <div class="ability"><span>SAG</span><span class="score">12 (+1)</span></div>
+              <div class="ability"><span>CAR</span><span class="score">10 (+0)</span></div>
+            </div>
+          </div>
+
+          <div class="stat-row">
+            <span class="section-label">Tiri Salvezza</span> DES +4, COS +5<br>
+            <span class="section-label">Abilità</span> Percezione +3, Furtività +4<br>
+            <span class="section-label">Sensi</span> scurovisione 18 m, Percezione passiva 13<br>
+            <span class="section-label">Linguaggi</span> —<br>
+            <span class="section-label">Grado di Sfida</span> 4 (1.100 PE)
+          </div>
+
+          <div class="stat-row">
+            <div class="trait">
+              <span class="trait-name">Fiuto del Predatore.</span>
+              Testo abilità speciale…
+            </div>
+            <div class="trait">
+              <span class="trait-name">Agguato.</span>
+              Testo abilità speciale…
+            </div>
+          </div>
+
+          <div class="stat-row">
+            <span class="section-label">Azioni</span>
+            <div class="action">
+              <span class="action-name">Multiattacco.</span>
+              Testo azione…
+            </div>
+            <div class="action">
+              <span class="action-name">Artigli.</span>
+              Testo attacco…
+            </div>
+          </div>
+        `;
+      }
+
+      return {
         contents: {
-          '.monster-header': 'Nome del Mostro',
-          '.monster-subtitle': 'Taglia media, mostruosità, neutrale malvagio',
-          '.monster-lore': `
-            <p>
-              Scrivi qui la descrizione narrativa del mostro: origine, comportamento,
-              territorio, leggende e qualsiasi dettaglio utile al master.
-            </p>
-            <p>
-              Questa sezione è completamente editabile: clicca e scrivi come in un documento.
-            </p>
-          `,
-          '.stat-block': `
-            <div class="stat-title">
-              Blocco statistiche
-            </div>
-
-            <div class="stat-row">
-              <span class="section-label">Classe Armatura</span> 15 (pelle coriacea)<br>
-              <span class="section-label">Punti Ferita</span> 68 (8d10 + 24)<br>
-              <span class="section-label">Velocità</span> 9 m
-            </div>
-
-            <div class="stat-row">
-              <div class="ability-grid">
-                <div class="ability"><span>FOR</span><span class="score">16 (+3)</span></div>
-                <div class="ability"><span>DES</span><span class="score">14 (+2)</span></div>
-                <div class="ability"><span>COS</span><span class="score">16 (+3)</span></div>
-                <div class="ability"><span>INT</span><span class="score">8 (-1)</span></div>
-                <div class="ability"><span>SAG</span><span class="score">12 (+1)</span></div>
-                <div class="ability"><span>CAR</span><span class="score">10 (+0)</span></div>
-              </div>
-            </div>
-
-            <div class="stat-row">
-              <span class="section-label">Tiri Salvezza</span> DES +4, COS +5<br>
-              <span class="section-label">Abilità</span> Percezione +3, Furtività +4<br>
-              <span class="section-label">Sensi</span> scurovisione 18 m, Percezione passiva 13<br>
-              <span class="section-label">Linguaggi</span> —<br>
-              <span class="section-label">Grado di Sfida</span> 4 (1.100 PE)
-            </div>
-
-            <div class="stat-row">
-              <div class="trait">
-                <span class="trait-name">Fiuto del Predatore.</span>
-                Testo abilità speciale…
-              </div>
-              <div class="trait">
-                <span class="trait-name">Agguato.</span>
-                Testo abilità speciale…
-              </div>
-            </div>
-
-            <div class="stat-row">
-              <span class="section-label">Azioni</span>
-              <div class="action">
-                <span class="action-name">Multiattacco.</span>
-                Testo azione…
-              </div>
-              <div class="action">
-                <span class="action-name">Artigli.</span>
-                Testo attacco…
-              </div>
-            </div>
-          `
+          '.monster-header': header,
+          '.monster-subtitle': subtitle,
+          '.monster-lore': lore,
+          '.stat-block': stats
         },
         imgSrc: ''
       };
+    }
 
+    function resetEditorToTemplate(templateId) {
+      currentTemplateId = templateId || 'standard';
+      const defaultState = buildDefaultStateByTemplate(currentTemplateId);
       applyState(defaultState);
       undoStack = [getState()];
       redoStack = [];
     }
 
+    function resetEditorToDefault() {
+      resetEditorToTemplate('standard');
+    }
+
     async function saveCurrentMonster() {
       const monster = getCurrentMonsterObject();
 
-      // preserva createdAt se esiste già
       if (currentMonsterId && !monster.createdAt) {
         const existing = await getMonsterFromDB(currentMonsterId);
         if (existing && existing.createdAt) {
@@ -1011,7 +1448,6 @@
       await saveMonsterToDB(monster);
       currentMonsterId = monster.id;
 
-      // aggiorna undo stack allo stato salvato
       undoStack = [getState()];
       redoStack = [];
 
@@ -1019,9 +1455,6 @@
       await loadMonstersList();
     }
 
-    /* ===============================
-       LIBRERIA: LISTA MOSTRI
-       =============================== */
     function formatDate(ts) {
       if (!ts) return '';
       const d = new Date(ts);
@@ -1029,6 +1462,15 @@
       const month = String(d.getMonth() + 1).padStart(2, '0');
       const year = d.getFullYear();
       return `${day}/${month}/${year}`;
+    }
+
+    function templateLabel(t) {
+      switch (t) {
+        case 'boss': return 'Boss';
+        case 'npc': return 'PNG';
+        case 'minion': return 'Minion';
+        default: return 'Standard';
+      }
     }
 
     async function loadMonstersList() {
@@ -1045,7 +1487,6 @@
         });
       }
 
-      // Ordina per updatedAt desc
       monsters.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
 
       monsterListEl.innerHTML = '';
@@ -1074,7 +1515,9 @@
 
         const meta = document.createElement('div');
         meta.className = 'monster-card-meta';
-        meta.textContent = 'Ultima modifica: ' + formatDate(m.updatedAt);
+        let metaText = 'Ultima modifica: ' + formatDate(m.updatedAt);
+        metaText += ' · Template: ' + templateLabel(m.template);
+        meta.textContent = metaText;
 
         main.appendChild(title);
         main.appendChild(subtitle);
@@ -1113,7 +1556,6 @@
       loadMonstersList();
     });
 
-    // Click sulla lista (event delegation)
     monsterListEl.addEventListener('click', async (e) => {
       const btn = e.target.closest('button');
       if (!btn) return;
@@ -1153,17 +1595,13 @@
       }
     });
 
-    // Pulsante "Nuovo mostro"
     document.getElementById('btn-new-monster').addEventListener('click', () => {
-      resetEditorToDefault();
+      const tmpl = templateSelectEl ? templateSelectEl.value : 'standard';
+      resetEditorToTemplate(tmpl);
       showView('editor');
     });
 
-    /* ===============================
-       AVVIO APP
-       =============================== */
     (async function initApp() {
-      // Mostra libreria e carica lista
       showView('library');
       await loadMonstersList();
     })();
